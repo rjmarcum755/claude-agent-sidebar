@@ -7,12 +7,23 @@ const PANE = 'agent-sidebar'
 const TITLE = 'Agents'
 const REFRESH_MS = 5000
 
-// Where the live feed is looked for, first match wins. The platform built in
-// the dashboard thread writes this file; until it exists the pane shows demo data.
-const FEED_PATHS = [
-  '/mnt/project-files/agent-sidebar/agents.json',
-  '/root/.claude/agent-sidebar/agents.json',
-]
+// Where the live feed is looked for, first match wins: $AGENT_FEED_FILE, then
+// ~/.claude/agent-sidebar/agents.json (where Crewdeck writes on your computer),
+// then the project's shared folder. Until one exists the pane shows demo data.
+const FEED_PATHS = ['/mnt/project-files/agent-sidebar/agents.json']
+
+async function feedPaths($: EngineInterface): Promise<string[]> {
+  const paths: string[] = []
+  try {
+    const custom = await $.env.get('AGENT_FEED_FILE')
+    if (custom) paths.push(custom)
+    const home = await $.env.get('HOME') ?? await $.env.get('USERPROFILE')
+    if (home) paths.push(`${home}/.claude/agent-sidebar/agents.json`)
+  } catch {
+    // no environment access: fall back to the fixed paths
+  }
+  return [...paths, ...FEED_PATHS]
+}
 
 const DEMO: Agent[] = [
   { id: 'clipper-yt', name: 'Clipper YT', business: 'Content clipping', status: 'running', task: 'Cutting 3 clips from a trending podcast', profitToday: 42.5, profitTotal: 1180 },
@@ -79,7 +90,7 @@ function stepDemo(agents: Agent[]): Agent[] {
 }
 
 async function refresh($: EngineInterface) {
-  for (const path of FEED_PATHS) {
+  for (const path of await feedPaths($)) {
     try {
       const agents = parseFeed(await $.fs.read(path))
       if (agents) {
