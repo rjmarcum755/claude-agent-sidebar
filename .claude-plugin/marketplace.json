@@ -1,0 +1,5 @@
+{
+  "name": "rj-mods",
+  "owner": { "name": "RJ" },
+  "plugins": [{ "name": "agent-sidebar", "source": "./" }]
+}

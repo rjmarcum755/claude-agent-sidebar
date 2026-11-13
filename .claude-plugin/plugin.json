@@ -1,0 +1,1 @@
+{ "name": "agent-sidebar", "version": "0.1.0", "description": "A live pane beside the chat listing every AI business agent with status, current task and profit", "types": "./types/index.d.ts", "author": { "name": "RJ" } }
